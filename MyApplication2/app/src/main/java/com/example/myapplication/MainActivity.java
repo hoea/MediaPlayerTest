@@ -15,6 +15,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Surface;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -26,16 +28,22 @@ import static android.media.MediaCodecList.ALL_CODECS;
 
 public class MainActivity extends AppCompatActivity {
 
-    String TAG = "hoge";
+    String TAG = "MediaStudyApp";
     private final int EXTERNAL_STORAGE_REQUEST_CODE = 1;
 
     MediaCodecCommonWrapper mWrapper[];
+    SurfaceView mSurfaceView = null;
+    Surface mSurface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkPermission();
+
+        mSurfaceView = (SurfaceView)findViewById(R.id.surfaceView);
+        mSurface = mSurfaceView.getHolder().getSurface();
+
         Button button1 = (Button)findViewById(R.id.button);
         button1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -45,22 +53,9 @@ public class MainActivity extends AppCompatActivity {
         Button button2 = (Button)findViewById(R.id.button2);
         button2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                getcodecs();
+                MediaCodecCommonWrapper.getcodecs();
             }
         });
-    }
-    private void getcodecs() {
-        Log.i(TAG, "getcodecs: called");
-        MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
-        MediaCodecInfo[] codecInfos = codeclist.getCodecInfos();
-        Log.i(TAG, "getcodecs: " + codecInfos.length);
-        for (int i=0;i < codecInfos.length;i++) {
-            Log.i(TAG, "getcodecs: " + codecInfos[i]);
-            String types[] = codecInfos[i].getSupportedTypes();
-            for (int j=0;j < types.length;j++) {
-                Log.i(TAG, "getcodecs: name:" + codecInfos[i].getName() + " type:" + types[j] );
-            }
-        }
     }
 
     private void extract() {
@@ -74,24 +69,50 @@ public class MainActivity extends AppCompatActivity {
         int numTracks = extractor.getTrackCount();
         mWrapper = new MediaCodecCommonWrapper[numTracks];
         Log.i(TAG, "extract: " + numTracks);
-        for (int i = 0; i < numTracks; ++i) {
+        for (int i = 0; i < numTracks; i++) {
             MediaFormat format = extractor.getTrackFormat(i);
             String mime = format.getString(MediaFormat.KEY_MIME);
-            mWrapper[i] = new MediaCodecCommonWrapper();
-            mWrapper[i].init(format);
-            Log.i(TAG, "extract: " + mime);
-            boolean weAreInterestedInThisTrack = true;
-            if (weAreInterestedInThisTrack) {
+            if (mime.indexOf("audio") != -1) {
+                mWrapper[i] = new MediaCodecAudioWrapper();
+                if (mWrapper[i].init(format,null) == false) {
+                    Log.e(TAG, "extract: invalid format" + mime );
+                    return;
+                }
+                Log.i(TAG, "create codec: " + mime);
                 extractor.selectTrack(i);
+
+            } else if (mime.indexOf("video") != -1) {
+                /*
+                mWrapper[i] = new MediaCodecVideoWrapper();
+                if (mWrapper[i].init(format,mSurface) == false) {
+                    Log.e(TAG, "extract: invalid format" + mime );
+                    return;
+                }
+                Log.i(TAG, "create codec: " + mime);
+                extractor.selectTrack(i);
+
+                 */
             }
+
         }
 
-        ByteBuffer inputBuffer = ByteBuffer.allocate(1024*1024); // 1M
+        ByteBuffer inputBuffer = ByteBuffer.allocate(8192); // 1M
         while (extractor.readSampleData(inputBuffer,0) >= 0) {
             int trackIndex = extractor.getSampleTrackIndex();
             long presentationTimeUs = extractor.getSampleTime();
-            Log.i(TAG, "extract: " + trackIndex + ":" + presentationTimeUs);
-            mWrapper[trackIndex].write(inputBuffer,presentationTimeUs);
+            Log.i(TAG, "extract: " + trackIndex + ":" + presentationTimeUs + " size=" + inputBuffer.remaining());
+            boolean writeResult = false;
+            while (true) {
+                writeResult = mWrapper[trackIndex].write(inputBuffer,presentationTimeUs);
+                if (writeResult == false){
+                    try {
+                        Thread.sleep(100); //3000ミリ秒Sleepする
+                    } catch (InterruptedException e) {
+                    }
+                } else {
+                    break;
+                }
+            }
             extractor.advance();
         }
 
