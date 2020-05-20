@@ -72,8 +72,7 @@ public class MediaCodecCommonWrapper implements Runnable {
         }
         HogeBuffer tmp = new HogeBuffer();
         tmp.pts = pts;
-        tmp.buffer = ByteBuffer.allocate(8192);
-        tmp.buffer.put(buffer);
+        tmp.buffer = buffer;
         synchronized (mBuffers) {
             mBuffers.add(tmp);
         }
@@ -98,12 +97,11 @@ public class MediaCodecCommonWrapper implements Runnable {
                     if (mBuffers.size() > 0) {
                         HogeBuffer buffer = mBuffers.get(0);
                         mBuffers.remove(0);
-                        Log.i(TAG, "run: remove pts=" + buffer.pts + ", size=" + buffer.buffer.remaining());
-                        inputBuffer.put(buffer.buffer.array(),0,buffer.buffer.remaining());
-                        mCodec.queueInputBuffer(inputIndex,0,inputBuffer.remaining(),buffer.pts,0);
+                        Log.d(TAG, "run: remove pts=" + buffer.pts + ", size=" + buffer.buffer.limit());
+                        inputBuffer.put(buffer.buffer.array(),0,buffer.buffer.limit());
+                        mCodec.queueInputBuffer(inputIndex,0,buffer.buffer.limit(),buffer.pts,0);
                         inputBuffer = null;
                         inputIndex = -1;
-
                     }
                 }
             }

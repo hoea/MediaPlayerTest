@@ -31,9 +31,10 @@ public class MainActivity extends AppCompatActivity {
     String TAG = "MediaStudyApp";
     private final int EXTERNAL_STORAGE_REQUEST_CODE = 1;
 
-    MediaCodecCommonWrapper mWrapper[];
+
     SurfaceView mSurfaceView = null;
     Surface mSurface;
+    MediaExtractorWrapper mExtractor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,65 +60,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void extract() {
-        MediaExtractor extractor = new MediaExtractor();
-        try {
-            extractor.setDataSource(Environment.getExternalStorageDirectory() + "/Download/01.mp4");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        int numTracks = extractor.getTrackCount();
-        mWrapper = new MediaCodecCommonWrapper[numTracks];
-        Log.i(TAG, "extract: " + numTracks);
-        for (int i = 0; i < numTracks; i++) {
-            MediaFormat format = extractor.getTrackFormat(i);
-            String mime = format.getString(MediaFormat.KEY_MIME);
-            if (mime.indexOf("audio") != -1) {
-                mWrapper[i] = new MediaCodecAudioWrapper();
-                if (mWrapper[i].init(format,null) == false) {
-                    Log.e(TAG, "extract: invalid format" + mime );
-                    return;
-                }
-                Log.i(TAG, "create codec: " + mime);
-                extractor.selectTrack(i);
-
-            } else if (mime.indexOf("video") != -1) {
-                /*
-                mWrapper[i] = new MediaCodecVideoWrapper();
-                if (mWrapper[i].init(format,mSurface) == false) {
-                    Log.e(TAG, "extract: invalid format" + mime );
-                    return;
-                }
-                Log.i(TAG, "create codec: " + mime);
-                extractor.selectTrack(i);
-
-                 */
-            }
-
-        }
-
-        ByteBuffer inputBuffer = ByteBuffer.allocate(8192); // 1M
-        while (extractor.readSampleData(inputBuffer,0) >= 0) {
-            int trackIndex = extractor.getSampleTrackIndex();
-            long presentationTimeUs = extractor.getSampleTime();
-            Log.i(TAG, "extract: " + trackIndex + ":" + presentationTimeUs + " size=" + inputBuffer.remaining());
-            boolean writeResult = false;
-            while (true) {
-                writeResult = mWrapper[trackIndex].write(inputBuffer,presentationTimeUs);
-                if (writeResult == false){
-                    try {
-                        Thread.sleep(100); //3000ミリ秒Sleepする
-                    } catch (InterruptedException e) {
-                    }
-                } else {
-                    break;
-                }
-            }
-            extractor.advance();
-        }
-
-        extractor.release();
-        extractor = null;
+        mExtractor = new MediaExtractorWrapper();
+        mExtractor.extract(Environment.getExternalStorageDirectory() + "/Download/02.mp4",mSurface);
     }
 
     @TargetApi(Build.VERSION_CODES.M)
