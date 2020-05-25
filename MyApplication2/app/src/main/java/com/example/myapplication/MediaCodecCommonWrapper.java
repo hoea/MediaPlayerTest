@@ -18,10 +18,17 @@ public class MediaCodecCommonWrapper implements Runnable {
     private String TAG = "MediaCodecCommonWrapper";
     protected MediaCodec mCodec;
     protected String mMimeTypes;
+    protected String mType = null;
 
     MediaCodecCommonWrapper()
     {
         mWorkFlg = true;
+    }
+    public String getType() {
+        return mType;
+    }
+    public boolean pause() {
+        return false;
     }
 
     public static void getcodecs() {

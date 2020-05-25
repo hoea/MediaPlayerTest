@@ -10,9 +10,34 @@ import android.util.Log;
 
 import java.nio.ByteBuffer;
 
-public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper {
+public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements MediaClock {
     AudioTrack mTrack;
     String TAG = "MediaCodecAudioWrapper";
+    MediaCodecAudioWrapper() {
+        mType = "AUDIO";
+    }
+
+    @Override
+    public boolean pause() {
+        if (mTrack == null) {
+            return false;
+        }
+        mTrack.pause();
+        return true;
+    }
+
+    @Override
+    public int getPosition() {
+        if (mTrack == null) {
+            return -1;
+        }
+        float framerate = (float)(mFrameRate)/1000;
+        Log.i(TAG, "getPosition: framerate" + framerate);
+        float position = (float)(mTrack.getPlaybackHeadPosition()) / framerate;
+        Log.i(TAG, "getPosition: pos=" + position);
+        return (int)(position);
+    }
+
 
     @Override
     protected boolean processOutputFormat() {
@@ -31,6 +56,7 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper {
         }
         return true;
     }
+    private int mFrameRate = -1;
 
     protected boolean setFormat(MediaFormat format) {
         int ch = AudioFormat.CHANNEL_OUT_MONO;
@@ -41,6 +67,7 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper {
         }
         Log.i(TAG, "setFormat: rate "+ format.getInteger(MediaFormat.KEY_SAMPLE_RATE));
 
+        mFrameRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE);
         int bufSize = AudioTrack.getMinBufferSize(
                 format.getInteger(MediaFormat.KEY_SAMPLE_RATE),
                 ch, AudioFormat.ENCODING_PCM_16BIT);
@@ -63,10 +90,10 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper {
     }
 
     protected boolean write(ByteBuffer buffer) {
-        Log.i(TAG, "write: " + buffer.remaining());
+        Log.d(TAG, "write: " + buffer.remaining());
         //int writeSize = mTrack.write(buffer.array(),0,buffer.remaining());
         int writeSize = mTrack.write(buffer,buffer.remaining(),AudioTrack.WRITE_BLOCKING);
-        Log.i(TAG, "write: " + writeSize);
+        Log.d(TAG, "write: " + writeSize);
         return true;
     }
 }

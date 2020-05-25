@@ -31,12 +31,10 @@ public class VideoSurface extends SurfaceView implements SurfaceHolder.Callback 
         Log.e(TAG, "surfaceDestroyed()");
     }
 
-    // SurfaceViewにてタッチイベントが検知されたときに呼び出される
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         Log.e(TAG, event.toString());
 
-        // getAction()メソッドを用いて、eventよりタッチイベントのアクションを取得
         if (event.getAction() == MotionEvent.ACTION_UP) {
             draw();
         }
