@@ -2,79 +2,76 @@ package com.example.myapplication;
 
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.os.Environment;
 import android.util.Log;
-import android.view.Surface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class MediaExtractorWrapper implements Runnable {
     final private String TAG = "MediaExtractorWrapper";
-    MediaCodecCommonWrapper mWrapper[];
+
     String mFilename = null;
     MediaExtractor mExtractor;
     Thread mThread = null;
 
-    public boolean init(String filename, Surface surface) {
+    MediaExtractorWrapperCallback mCallback = null;
+
+    MediaExtractorWrapper(MediaExtractorWrapperCallback callback) {
+        mCallback = callback;
+    }
+
+    public boolean selectTrack(int idx) {
+        Log.i(TAG, "selectTrack: " + idx);
+        if (mExtractor == null) {
+            return false;
+        }
+        mExtractor.selectTrack(idx);
+        return true;
+    }
+
+    public MediaFormat[] getContentsInfos(String filename) {
         mFilename = filename;
         mExtractor = new MediaExtractor();
         try {
             mExtractor.setDataSource(mFilename);
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
         }
         int numTracks = mExtractor.getTrackCount();
-        mWrapper = new MediaCodecCommonWrapper[numTracks];
         Log.i(TAG, "extract: " + numTracks);
+        MediaFormat formats[] = new MediaFormat[numTracks];
         for (int i = 0; i < numTracks; i++) {
-            MediaFormat format = mExtractor.getTrackFormat(i);
-            String mime = format.getString(MediaFormat.KEY_MIME);
-            if (mime.indexOf("audio") != -1) {
-                mWrapper[i] = new MediaCodecAudioWrapper();
-                if (mWrapper[i].init(format,null) == false) {
-                    Log.e(TAG, "extract: invalid format" + mime );
-                    return false;
-                }
-                Log.i(TAG, "create codec: " + mime);
-                mExtractor.selectTrack(i);
-
-            } else if (mime.indexOf("video") != -1) {
-                mWrapper[i] = new MediaCodecVideoWrapper();
-                if (mWrapper[i].init(format,surface) == false) {
-                    Log.e(TAG, "extract: invalid format" + mime );
-                    return false;
-                }
-                Log.i(TAG, "create codec: " + mime);
-                mExtractor.selectTrack(i);
-            }
+            formats[i] = mExtractor.getTrackFormat(i);
         }
-        MediaCodecVideoWrapper video = (MediaCodecVideoWrapper)getMediaCodec("VIDEO");
-        MediaClock audio = (MediaClock)getMediaCodec("AUDIO");
-        video.setMediaClock(audio);
-        return true;
+        return formats;
     }
 
     public void extract() {
         mThread = new Thread(this);
+        mRunning = true;
         mThread.start();
     }
-    public boolean pause() {
-        return getMediaCodec("AUDIO").pause();
-    }
 
-    private MediaCodecCommonWrapper getMediaCodec(String type) {
-        for (int i = 0; i < mWrapper.length;i++) {
-            if (mWrapper[i].getType() == type) {
-                return mWrapper[i];
+    public boolean stop() {
+        if (mThread.isAlive() == false) {
+            Log.w(TAG, "stop: not running");
+            return true;
+        }
+        mRunning = false;
+        while(mThread.isAlive() == true) {
+            Log.i(TAG, "stop: wait for finishing Extractor ");
+            try {
+                Thread.sleep(100);
+            }catch (InterruptedException e) {
             }
         }
-        return null;
+        return true;
     }
 
+    boolean mRunning = false;
+
     public void run() {
-        while (true) {
+        while (mRunning == true) {
             ByteBuffer inputBuffer = ByteBuffer.allocate(128*1024);
             if (mExtractor.readSampleData(inputBuffer,0) <0) {
                 break;
@@ -88,8 +85,8 @@ public class MediaExtractorWrapper implements Runnable {
                     " capa=" + inputBuffer.capacity());
 
             boolean writeResult = false;
-            while (true) {
-                writeResult = mWrapper[trackIndex].write(inputBuffer,presentationTimeUs);
+            while (mRunning == true) {
+                writeResult = mCallback.writeCallback(inputBuffer,presentationTimeUs,trackIndex);
                 if (writeResult == false){
                     try {
                         Thread.sleep(100); //3000ミリ秒Sleepする
@@ -103,5 +100,6 @@ public class MediaExtractorWrapper implements Runnable {
         }
         mExtractor.release();
         mExtractor = null;
+        mRunning = false;
     }
 }

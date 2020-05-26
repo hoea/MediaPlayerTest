@@ -5,7 +5,6 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
 import android.util.Log;
-import android.view.Surface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,15 +19,22 @@ public class MediaCodecCommonWrapper implements Runnable {
     protected String mMimeTypes;
     protected String mType = null;
 
-    MediaCodecCommonWrapper()
-    {
+    MediaCodecCommonWrapper() {
         mWorkFlg = true;
     }
     public String getType() {
         return mType;
     }
-    public boolean pause() {
-        return false;
+    public boolean pause(boolean val) {
+        return true;
+    }
+
+    public boolean stop(){
+        if (mCodec != null) {
+            mCodec.stop();
+            mCodec.release();
+        }
+        return true;
     }
 
     public static void getcodecs() {
@@ -45,8 +51,7 @@ public class MediaCodecCommonWrapper implements Runnable {
         }
     }
 
-    public boolean init(MediaFormat format, Surface surface)
-    {
+    public boolean init(MediaFormat format) {
         Log.i(TAG, "init: called");
         MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
         String hoge = codeclist.findDecoderForFormat(format);
@@ -55,18 +60,26 @@ public class MediaCodecCommonWrapper implements Runnable {
             Log.e(TAG, "init: invalid codec mime = " + format.getString(MediaFormat.KEY_MIME));
             return false;
         }
-
         try {
             mCodec = MediaCodec.createByCodecName(hoge);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
+        if (mCodec == null) {
+            Log.e(TAG, "init: error......" + mCodec);
+            return false;
+        }
         mCodec.configure(format,null,0,null);
+        return true;
+    }
+
+    public boolean start() {
         mCodec.start();
         new Thread(this).start();
         return true;
     }
+
     class HogeBuffer {
         public long pts;
         public ByteBuffer buffer;
@@ -93,11 +106,11 @@ public class MediaCodecCommonWrapper implements Runnable {
         while (mWorkFlg == true) {
             if (inputIndex < 0 && inputBuffer == null) {
                 inputIndex = mCodec.dequeueInputBuffer(10);
-                Log.i(TAG, "run: getInputIndex= " + inputIndex);
+                Log.d(TAG, "run: getInputIndex= " + inputIndex);
             }
             if (inputIndex >= 0 && inputBuffer == null) {
                 inputBuffer = mCodec.getInputBuffer(inputIndex);
-                Log.i(TAG, "run: getIhnputBuffer success" + inputBuffer + " limit:" + inputBuffer.limit());
+                Log.d(TAG, "run: getInputBuffer success" + inputBuffer + " limit:" + inputBuffer.limit());
             }
             if (inputBuffer != null) {
                 synchronized (mBuffers) {

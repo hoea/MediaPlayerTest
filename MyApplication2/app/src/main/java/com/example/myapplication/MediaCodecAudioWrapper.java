@@ -5,7 +5,6 @@ import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
@@ -13,38 +12,43 @@ import java.nio.ByteBuffer;
 public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements MediaClock {
     AudioTrack mTrack;
     String TAG = "MediaCodecAudioWrapper";
+    private int mFrameRate = -1;
+
     MediaCodecAudioWrapper() {
+        super();
         mType = "AUDIO";
     }
-
     @Override
-    public boolean pause() {
+    public boolean pause(boolean val) {
         if (mTrack == null) {
             return false;
         }
-        mTrack.pause();
+        synchronized (mTrack) {
+            if (val == true) {
+                mTrack.pause();
+            } else {
+                mTrack.play();
+            }
+        }
         return true;
     }
-
     @Override
     public int getPosition() {
         if (mTrack == null) {
             return -1;
         }
         float framerate = (float)(mFrameRate)/1000;
-        Log.i(TAG, "getPosition: framerate" + framerate);
+        Log.d(TAG, "getPosition: framerate" + framerate);
         float position = (float)(mTrack.getPlaybackHeadPosition()) / framerate;
-        Log.i(TAG, "getPosition: pos=" + position);
+        Log.d(TAG, "getPosition: pos=" + position);
         return (int)(position);
     }
-
-
     @Override
     protected boolean processOutputFormat() {
         MediaCodec.BufferInfo output = new MediaCodec.BufferInfo();
         int outputIndex = mCodec.dequeueOutputBuffer(output,100);
         if (outputIndex >= 0) {
-            Log.i(TAG, "processOutputFormat: " + outputIndex);
+            Log.d(TAG, "processOutputFormat: " + outputIndex);
             ByteBuffer outBuffer = mCodec.getOutputBuffer(outputIndex);
             write(outBuffer);
             mCodec.releaseOutputBuffer(outputIndex,false);
@@ -56,8 +60,6 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         }
         return true;
     }
-    private int mFrameRate = -1;
-
     protected boolean setFormat(MediaFormat format) {
         int ch = AudioFormat.CHANNEL_OUT_MONO;
         Log.i(TAG, "setFormat: mime "+ format.getString(MediaFormat.KEY_MIME));
@@ -88,12 +90,13 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         mTrack.play();
         return true;
     }
-
     protected boolean write(ByteBuffer buffer) {
         Log.d(TAG, "write: " + buffer.remaining());
         //int writeSize = mTrack.write(buffer.array(),0,buffer.remaining());
-        int writeSize = mTrack.write(buffer,buffer.remaining(),AudioTrack.WRITE_BLOCKING);
-        Log.d(TAG, "write: " + writeSize);
+        synchronized (mTrack) {
+            int writeSize = mTrack.write(buffer, buffer.remaining(), AudioTrack.WRITE_BLOCKING);
+            Log.d(TAG, "write: " + writeSize);
+        }
         return true;
     }
 }
