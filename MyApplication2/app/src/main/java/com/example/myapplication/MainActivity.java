@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -20,7 +21,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     String TAG = "MediaStudyApp";
     private final int EXTERNAL_STORAGE_REQUEST_CODE = 1;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 data);
         listView = (ListView)findViewById(R.id.contentList);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(this);
 
 
         Button button1 = (Button)findViewById(R.id.button);
@@ -82,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private void extract() {
         mController = new MediaController();
         mController.initialize(mSurface);
-        mController.prepare(Environment.getExternalStorageDirectory() + "/Download/01.mp4");
+        mController.prepare(Environment.getExternalStorageDirectory() + "/Download/02.mp4");
         mController.start();
     }
 
@@ -95,5 +97,18 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "this application can work if permitted", Toast.LENGTH_SHORT).show();
         }
         requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, EXTERNAL_STORAGE_REQUEST_CODE);
+    }
+
+    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+        Log.i(TAG, "onItemClick: " + position);
+        Log.i(TAG, "onItemClick: " + parent.getItemAtPosition(position).toString());
+        if (mController != null) {
+            mController.stop();
+        }
+        mController = new MediaController();
+        mController.initialize(mSurface);
+        mController.prepare(parent.getItemAtPosition(position).toString());
+        mController.start();
+        return;
     }
 }

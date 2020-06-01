@@ -13,6 +13,7 @@ public class MediaExtractorWrapper implements Runnable {
     String mFilename = null;
     MediaExtractor mExtractor;
     Thread mThread = null;
+    boolean mRunning = false;
 
     MediaExtractorWrapperCallback mCallback = null;
 
@@ -68,7 +69,6 @@ public class MediaExtractorWrapper implements Runnable {
         return true;
     }
 
-    boolean mRunning = false;
 
     public void run() {
         while (mRunning == true) {

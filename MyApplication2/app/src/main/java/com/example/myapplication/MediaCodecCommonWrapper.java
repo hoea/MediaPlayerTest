@@ -30,6 +30,14 @@ public class MediaCodecCommonWrapper implements Runnable {
     }
 
     public boolean stop(){
+        mWorkFlg = false;
+        while(mThread.isAlive() == true) {
+            Log.i(TAG, "stop: wait for finishing Extractor ");
+            try {
+                Thread.sleep(100);
+            }catch (InterruptedException e) {
+            }
+        }
         if (mCodec != null) {
             mCodec.stop();
             mCodec.release();
@@ -74,9 +82,12 @@ public class MediaCodecCommonWrapper implements Runnable {
         return true;
     }
 
+    Thread mThread;
     public boolean start() {
+        mWorkFlg = true;
         mCodec.start();
-        new Thread(this).start();
+        mThread = new Thread(this);
+        mThread.start();
         return true;
     }
 
@@ -127,6 +138,7 @@ public class MediaCodecCommonWrapper implements Runnable {
             }
             processOutputFormat();
         }
+        Log.i(TAG, "run: thread return");
     }
     protected boolean processOutputFormat() {
         return false;

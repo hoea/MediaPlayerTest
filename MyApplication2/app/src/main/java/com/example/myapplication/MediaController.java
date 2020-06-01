@@ -46,6 +46,7 @@ public class MediaController implements MediaExtractorWrapperCallback {
         MediaFormat[] formats = mExtractor.getContentsInfos(filename);
         mFormats = new MediaFormatInfo[formats.length];
 
+        MediaCodecVideoWrapper video = null;
         // TODO:XXX
         for (int i = 0;i < formats.length;i++) {
             mFormats[i] = new MediaFormatInfo(formats[i], null);
@@ -55,6 +56,7 @@ public class MediaController implements MediaExtractorWrapperCallback {
                 mClock = (MediaClock)mFormats[i].mWrapper;
             } else if (mime.indexOf("video") != -1) {
                 mFormats[i].mWrapper = new MediaCodecVideoWrapper(mSurface);
+                video = (MediaCodecVideoWrapper)(mFormats[i].mWrapper);
             }
             if (mFormats[i].mWrapper != null) {
                 if (mFormats[i].mWrapper.init(mFormats[i].mFormat) == false) {
@@ -65,8 +67,9 @@ public class MediaController implements MediaExtractorWrapperCallback {
             }
 
         }
-        MediaCodecVideoWrapper video = (MediaCodecVideoWrapper)(mFormats[0].mWrapper);
-        video.setMediaClock(mClock);
+        if (video != null) {
+            video.setMediaClock(mClock);
+        }
         mState = PlayerState.PREPARED;
         return false;
     }

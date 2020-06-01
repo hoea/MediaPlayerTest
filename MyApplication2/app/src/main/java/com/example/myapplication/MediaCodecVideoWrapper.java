@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.media.Image;
 import android.media.MediaCodec;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
@@ -7,6 +8,7 @@ import android.util.Log;
 import android.view.Surface;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static android.media.MediaCodecList.ALL_CODECS;
 
@@ -51,8 +53,12 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
         if (outputIndex < 0) {
             mBufferInfo = new MediaCodec.BufferInfo();
             outputIndex = mCodec.dequeueOutputBuffer(mBufferInfo,100);
+
         }
         if (outputIndex >= 0) {
+            ByteBuffer output = mCodec.getOutputBuffer(outputIndex);
+            Image image= mCodec.getOutputImage(outputIndex);
+            Log.i(TAG, "processOutputFormat: " + output);
             Log.d(TAG, "processOutputFormat: " + outputIndex +
                     " pts=" + mBufferInfo.presentationTimeUs +
                     " time=" + mClock.getPosition());
