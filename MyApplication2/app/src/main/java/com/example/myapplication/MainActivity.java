@@ -16,15 +16,18 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity
+        implements AdapterView.OnItemClickListener, MediaControllerCallback {
 
     String TAG = "MediaStudyApp";
     private final int EXTERNAL_STORAGE_REQUEST_CODE = 1;
+    ProgressBar mbar;
 
     SurfaceView mSurfaceView = null;
     Surface mSurface;
@@ -58,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
 
+        mbar = (ProgressBar)findViewById(R.id.progressBar);
+        mbar.setMax(100);
+        mbar.setProgress(50);
+
 
         Button button1 = (Button)findViewById(R.id.button);
         button1.setOnClickListener(new View.OnClickListener() {
@@ -82,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
     MediaController mController = null;
     private void extract() {
-        mController = new MediaController();
+        mController = new MediaController(this);
         mController.initialize(mSurface);
         mController.prepare(Environment.getExternalStorageDirectory() + "/Download/02.mp4");
         mController.start();
@@ -105,10 +112,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if (mController != null) {
             mController.stop();
         }
-        mController = new MediaController();
+        mController = new MediaController(this);
         mController.initialize(mSurface);
         mController.prepare(parent.getItemAtPosition(position).toString());
         mController.start();
+        return;
+    }
+
+    public void notifyPlayPosition(long pos, long duration) {
+        Log.i(TAG, "notifyPlayPosition: " + pos + "/" + duration);
+        mbar.setMax((int)duration);
+        mbar.setProgress((int)pos);
         return;
     }
 }

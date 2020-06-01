@@ -58,7 +58,7 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
         if (outputIndex >= 0) {
             ByteBuffer output = mCodec.getOutputBuffer(outputIndex);
             Image image= mCodec.getOutputImage(outputIndex);
-            Log.i(TAG, "processOutputFormat: " + output);
+            Log.d(TAG, "processOutputFormat: " + output);
             Log.d(TAG, "processOutputFormat: " + outputIndex +
                     " pts=" + mBufferInfo.presentationTimeUs +
                     " time=" + mClock.getPosition());

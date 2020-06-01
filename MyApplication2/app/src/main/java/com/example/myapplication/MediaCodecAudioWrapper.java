@@ -14,9 +14,10 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
     String TAG = "MediaCodecAudioWrapper";
     private int mFrameRate = -1;
 
-    MediaCodecAudioWrapper() {
+    MediaCodecAudioWrapper(MediaClockCallback callback) {
         super();
         mType = "AUDIO";
+        mCallback = callback;
     }
     @Override
     public boolean pause(boolean val) {
@@ -32,6 +33,8 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         }
         return true;
     }
+    int mLastPos = 0;
+    MediaClockCallback mCallback;
     @Override
     public int getPosition() {
         if (mTrack == null) {
@@ -41,6 +44,12 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         Log.d(TAG, "getPosition: framerate" + framerate);
         float position = (float)(mTrack.getPlaybackHeadPosition()) / framerate;
         Log.d(TAG, "getPosition: pos=" + position);
+        if (Math.abs(position - mLastPos) >= 500) {
+            if (mCallback != null) {
+                mCallback.notifyPlayPosition((int)position);
+                mLastPos = (int)position;
+            }
+        }
         return (int)(position);
     }
     @Override
