@@ -42,6 +42,8 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
             return false;
         }
         mCodec.configure(format,mSufrace,0,null);
+        //mCodec.configure(format,null,0,null);
+
         return true;
     }
     public boolean setMediaClock(MediaClock clock) {
@@ -63,6 +65,13 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
                     " pts=" + mBufferInfo.presentationTimeUs +
                     " time=" + mClock.getPosition());
             int timediff = (int)(mBufferInfo.presentationTimeUs/1000) - mClock.getPosition();
+
+            if (mSufrace == null) { // no surface --> drop frame
+                mCodec.releaseOutputBuffer(outputIndex,false);
+                outputIndex = -1;
+                mBufferInfo = null;
+                return true;
+            }
             if (timediff > 50 /*ms*/) {
                 // not display yet.
                 return false;
