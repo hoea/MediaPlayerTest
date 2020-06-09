@@ -46,12 +46,12 @@ public class MediaCodecCommonWrapper implements Runnable {
     }
 
     public static void getcodecs() {
-        Log.i("Hoge", "getcodecs: called");
+        Log.d("Hoge", "getcodecs: called");
         MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
         MediaCodecInfo[] codecInfos = codeclist.getCodecInfos();
         Log.i("Hoge", "getcodecs: " + codecInfos.length);
         for (int i=0;i < codecInfos.length;i++) {
-            Log.i("Hoge", "getcodecs: " + codecInfos[i]);
+            Log.d("Hoge", "getcodecs: " + codecInfos[i]);
             String types[] = codecInfos[i].getSupportedTypes();
             for (int j=0;j < types.length;j++) {
                 Log.i("Hoge", "getcodecs: name:" + codecInfos[i].getName() + " type:" + types[j] );

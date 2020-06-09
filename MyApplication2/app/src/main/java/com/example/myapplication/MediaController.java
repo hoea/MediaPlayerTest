@@ -81,7 +81,7 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
             video.setMediaClock(mClock);
         }
         if (mCallback != null) {
-            mCallback.notifyPlayPosition(0, mDuration);
+            mCallback.notifyPlayPosition(this,0, mDuration);
         }
         mState = PlayerState.PREPARED;
         return false;
@@ -138,7 +138,7 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
 
     public void notifyPlayPosition(long pos) {
         if (mCallback != null) {
-            mCallback.notifyPlayPosition(pos, mDuration);
+            mCallback.notifyPlayPosition(this, pos, mDuration);
         }
     }
 }

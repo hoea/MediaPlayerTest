@@ -8,10 +8,15 @@ import android.util.Log;
 
 import java.nio.ByteBuffer;
 
-public class AudioSink {
+public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
     AudioTrack mTrack;
     String TAG = "AudioSink";
     private int mFrameRate = -1;
+    AudioSinkCallback mCallback = null;
+
+    AudioSink(AudioSinkCallback callback) {
+        mCallback = callback;
+    }
 
     protected boolean setFormat(MediaFormat format) {
         int ch = AudioFormat.CHANNEL_OUT_MONO;
@@ -40,10 +45,37 @@ public class AudioSink {
                 )
                 .setBufferSizeInBytes(bufSize)
                 .build();
+
+        mTrack.setPlaybackPositionUpdateListener(this);
+        mTrack.setPositionNotificationPeriod(1024);
+
         mTrack.play();
         return true;
     }
+    
+    public void onMarkerReached(AudioTrack track) {
+        Log.i(TAG, "onMarkerReached: called");
+    }
 
+    private int mPosition = 0;
+    private int mLastPos = 0;
+
+    public void onPeriodicNotification(AudioTrack track) {
+        Log.d(TAG, "onPeriodicNotification: called");
+        float framerate = (float)(mFrameRate)/1000;
+        Log.d(TAG, "getPosition: framerate" + framerate);
+        float position = (float)(track.getPlaybackHeadPosition()) / framerate;
+        Log.d(TAG, "getPosition: pos=" + position);
+
+        mPosition = (int)(position);
+        if (Math.abs(mPosition - mLastPos) >= 500) {
+            if (mCallback != null) {
+                mCallback.notifyPlayPosition(mPosition);
+                mLastPos = mPosition;
+            }
+        }
+    }
+    
     public boolean pause(boolean val) {
         if (mTrack == null) {
             return false;
@@ -59,16 +91,9 @@ public class AudioSink {
     }
 
     public int getPosition() {
-        if (mTrack == null) {
-            return -1;
-        }
-        float framerate = (float)(mFrameRate)/1000;
-        Log.d(TAG, "getPosition: framerate" + framerate);
-        float position = (float)(mTrack.getPlaybackHeadPosition()) / framerate;
-        Log.d(TAG, "getPosition: pos=" + position);
-
-        return (int)(position);
+        return mPosition;
     }
+
     protected boolean write(ByteBuffer buffer) {
         Log.d(TAG, "write: " + buffer.remaining());
         //int writeSize = mTrack.write(buffer.array(),0,buffer.remaining());

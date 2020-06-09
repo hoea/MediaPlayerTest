@@ -17,6 +17,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import java.io.File;
@@ -27,11 +29,16 @@ public class MainActivity extends AppCompatActivity
 
     String TAG = "MediaStudyApp";
     private final int EXTERNAL_STORAGE_REQUEST_CODE = 1;
-    ProgressBar mbar;
 
-    SurfaceView mSurfaceView = null;
-    Surface mSurface;
-    MediaExtractorWrapper mExtractor;
+    class ContollerTable {
+        SurfaceView view;
+        Surface surface;
+        ProgressBar bar;
+        MediaController controller;
+    }
+    final int TBL_SIZE = 2;
+    ContollerTable[] mControllers = null;
+
     static ArrayAdapter<String> adapter;
     ListView listView;
 
@@ -41,8 +48,20 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         checkPermission();
 
-        mSurfaceView = (SurfaceView)findViewById(R.id.surfaceView);
-        mSurface = mSurfaceView.getHolder().getSurface();
+        mControllers = new ContollerTable[TBL_SIZE];
+        for (int i = 0;i < TBL_SIZE;i++) {
+            mControllers[i] = new ContollerTable();
+        }
+        mControllers[0].view = (SurfaceView)findViewById(R.id.surfaceView);
+        mControllers[0].surface  = mControllers[0].view.getHolder().getSurface();
+        mControllers[1].view = (SurfaceView)findViewById(R.id.surfaceView2);
+        mControllers[1].surface  = mControllers[1].view.getHolder().getSurface();
+        mControllers[0].bar = (ProgressBar)findViewById(R.id.progressBar);
+        mControllers[1].bar = (ProgressBar)findViewById(R.id.progressBar2);
+        for (int i = 0;i < TBL_SIZE;i++) {
+            mControllers[i].bar.setMax(100);
+            mControllers[i].bar.setProgress(50);
+        }
 
         ArrayList data = new ArrayList<>();
         File dir = new File(Environment.getExternalStorageDirectory() + "/Download");
@@ -61,11 +80,6 @@ public class MainActivity extends AppCompatActivity
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
 
-        mbar = (ProgressBar)findViewById(R.id.progressBar);
-        mbar.setMax(100);
-        mbar.setProgress(50);
-
-
         Button button1 = (Button)findViewById(R.id.button);
         button1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -81,18 +95,20 @@ public class MainActivity extends AppCompatActivity
         Button button3 = (Button)findViewById(R.id.button3);
         button3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (mController != null) {
-                    mController.pause();
+                int index = getDisplayIndex();
+                if (mControllers[index].controller != null) {
+                    mControllers[index].controller.pause();
                 }
             }
         });
     }
-    MediaController mController = null;
+
     private void extract() {
-        mController = new MediaController(this);
-        mController.initialize(mSurface);
-        mController.prepare(Environment.getExternalStorageDirectory() + "/Download/02.mp4");
-        mController.start();
+        int index = getDisplayIndex();
+        mControllers[index].controller = new MediaController(this);
+        mControllers[index].controller.initialize(mControllers[index].surface);
+        mControllers[index].controller.prepare(Environment.getExternalStorageDirectory() + "/Download/02.mp4");
+        mControllers[index].controller.start();
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -106,23 +122,55 @@ public class MainActivity extends AppCompatActivity
         requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, EXTERNAL_STORAGE_REQUEST_CODE);
     }
 
+    public int getDisplayIndex() {
+        RadioGroup mdisp = (RadioGroup)findViewById(R.id.radiogroup_id);
+        int selected = mdisp.getCheckedRadioButtonId();
+        RadioButton button = (RadioButton)findViewById(selected);
+        int index = 0;
+        if (button.getText().toString().equals("disp1") == true) {
+            Log.i(TAG, "onItemClick: disp1");
+            index = 0;
+        } else if (button.getText().toString().equals("disp2") == true) {
+            Log.i(TAG, "onItemClick: disp2");
+            index = 1;
+        }
+        return index;
+    }
+
+    //private RadioGroup mdisp;
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         Log.i(TAG, "onItemClick: " + position);
         Log.i(TAG, "onItemClick: " + parent.getItemAtPosition(position).toString());
-        if (mController != null) {
-            mController.stop();
+
+        //DisplaySelection select = new DisplaySelection();
+        //select.show(getSupportFragmentManager(), "missiles");
+        //int index = select.getDisplay();
+
+        int index = getDisplayIndex();
+
+        if (mControllers[index].controller != null) {
+            mControllers[index].controller.stop();
         }
-        mController = new MediaController(this);
-        mController.initialize(mSurface);
-        mController.prepare(parent.getItemAtPosition(position).toString());
-        mController.start();
+        mControllers[index].controller = new MediaController(this);
+        mControllers[index].controller.initialize(mControllers[index].surface);
+        mControllers[index].controller.prepare(parent.getItemAtPosition(position).toString());
+        mControllers[index].controller.start();
         return;
     }
 
-    public void notifyPlayPosition(long pos, long duration) {
+    public void notifyPlayPosition(MediaController controller,long pos, long duration) {
         Log.i(TAG, "notifyPlayPosition: " + pos + "/" + duration);
-        mbar.setMax((int)duration);
-        mbar.setProgress((int)pos);
+        ProgressBar bar = null;
+        for (int i = 0;i<TBL_SIZE;i++) {
+            if (controller == mControllers[i].controller) {
+                bar =  mControllers[i].bar;
+                break;
+            }
+        }
+        if (bar != null) {
+            bar.setMax((int) duration);
+            bar.setProgress((int) pos);
+        }
         return;
     }
 }

@@ -3,12 +3,11 @@ package com.example.myapplication;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
 
-public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements MediaClock {
+public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements MediaClock, AudioSinkCallback {
     AudioSink mSink;
     String TAG = "MediaCodecAudioWrapper";
 
@@ -16,7 +15,7 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         super();
         mType = "AUDIO";
         mCallback = callback;
-        mSink = new AudioSink();
+        mSink = new AudioSink(this);
     }
     @Override
     public boolean pause(boolean val) {
@@ -26,18 +25,18 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         return mSink.pause(val);
     }
 
-    int mLastPos = 0;
+
     MediaClockCallback mCallback;
     @Override
     public int getPosition() {
-        int position = mSink.getPosition();
-        if (Math.abs(position - mLastPos) >= 500) {
-            if (mCallback != null) {
-                mCallback.notifyPlayPosition((int)position);
-                mLastPos = (int)position;
-            }
+        return mSink.getPosition();
+    }
+
+    @Override
+    public void notifyPlayPosition(long pos) {
+        if (mCallback != null) {
+            mCallback.notifyPlayPosition(pos);
         }
-        return position;
     }
 
     @Override
