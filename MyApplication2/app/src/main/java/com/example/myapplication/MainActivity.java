@@ -27,7 +27,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
         implements AdapterView.OnItemClickListener, MediaControllerCallback {
 
-    String TAG = "MediaStudyApp";
+    private String TAG = "MediaStudyApp";
     private final int EXTERNAL_STORAGE_REQUEST_CODE = 1;
 
     class ContollerTable {
@@ -36,11 +36,11 @@ public class MainActivity extends AppCompatActivity
         ProgressBar bar;
         MediaController controller;
     }
-    final int TBL_SIZE = 2;
-    ContollerTable[] mControllers = null;
+    private final int TBL_SIZE = 2;
+    private ContollerTable[] mControllers = null;
 
-    static ArrayAdapter<String> adapter;
-    ListView listView;
+    private static ArrayAdapter<String> adapter;
+    private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity
         requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, EXTERNAL_STORAGE_REQUEST_CODE);
     }
 
-    public int getDisplayIndex() {
+    private int getDisplayIndex() {
         RadioGroup mdisp = (RadioGroup)findViewById(R.id.radiogroup_id);
         int selected = mdisp.getCheckedRadioButtonId();
         RadioButton button = (RadioButton)findViewById(selected);

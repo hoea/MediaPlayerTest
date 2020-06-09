@@ -18,6 +18,9 @@ public class MediaCodecCommonWrapper implements Runnable {
     protected MediaCodec mCodec;
     protected String mMimeTypes;
     protected String mType = null;
+    private Thread mThread;
+    protected List<HogeBuffer> mBuffers = new ArrayList<HogeBuffer>();
+    private boolean mWorkFlg;
 
     MediaCodecCommonWrapper() {
         mWorkFlg = true;
@@ -82,7 +85,6 @@ public class MediaCodecCommonWrapper implements Runnable {
         return true;
     }
 
-    Thread mThread;
     public boolean start() {
         mWorkFlg = true;
         mCodec.start();
@@ -95,7 +97,6 @@ public class MediaCodecCommonWrapper implements Runnable {
         public long pts;
         public ByteBuffer buffer;
     }
-    List<HogeBuffer> mBuffers = new ArrayList<HogeBuffer>();
 
     public boolean write(ByteBuffer buffer, long pts) {
         if (mBuffers.size() >= 50) {
@@ -109,7 +110,7 @@ public class MediaCodecCommonWrapper implements Runnable {
         }
         return true;
     }
-    private boolean mWorkFlg;
+
     public void run() {
         Log.i(TAG, "run: start!");
         int inputIndex = -1;

@@ -9,16 +9,18 @@ import android.util.Log;
 import java.nio.ByteBuffer;
 
 public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
-    AudioTrack mTrack;
-    String TAG = "AudioSink";
+    private AudioTrack mTrack;
+    private String TAG = "AudioSink";
     private int mFrameRate = -1;
-    AudioSinkCallback mCallback = null;
+    private AudioSinkCallback mCallback = null;
+    private int mPosition = 0;
+    private int mLastPos = 0;
 
     AudioSink(AudioSinkCallback callback) {
         mCallback = callback;
     }
 
-    protected boolean setFormat(MediaFormat format) {
+    public boolean setFormat(MediaFormat format) {
         int ch = AudioFormat.CHANNEL_OUT_MONO;
         Log.i(TAG, "setFormat: mime "+ format.getString(MediaFormat.KEY_MIME));
         Log.i(TAG, "setFormat: ch "+ format.getInteger(MediaFormat.KEY_CHANNEL_COUNT));
@@ -57,9 +59,6 @@ public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
         Log.i(TAG, "onMarkerReached: called");
     }
 
-    private int mPosition = 0;
-    private int mLastPos = 0;
-
     public void onPeriodicNotification(AudioTrack track) {
         Log.d(TAG, "onPeriodicNotification: called");
         float framerate = (float)(mFrameRate)/1000;
@@ -94,7 +93,7 @@ public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
         return mPosition;
     }
 
-    protected boolean write(ByteBuffer buffer) {
+    public boolean write(ByteBuffer buffer) {
         Log.d(TAG, "write: " + buffer.remaining());
         //int writeSize = mTrack.write(buffer.array(),0,buffer.remaining());
         int writeSize = mTrack.write(buffer, buffer.remaining(), AudioTrack.WRITE_BLOCKING);

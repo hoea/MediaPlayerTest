@@ -8,8 +8,9 @@ import android.util.Log;
 import java.nio.ByteBuffer;
 
 public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements MediaClock, AudioSinkCallback {
-    AudioSink mSink;
-    String TAG = "MediaCodecAudioWrapper";
+    private AudioSink mSink;
+    private String TAG = "MediaCodecAudioWrapper";
+    private MediaClockCallback mCallback;
 
     MediaCodecAudioWrapper(MediaClockCallback callback) {
         super();
@@ -25,8 +26,6 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         return mSink.pause(val);
     }
 
-
-    MediaClockCallback mCallback;
     @Override
     public int getPosition() {
         return mSink.getPosition();
