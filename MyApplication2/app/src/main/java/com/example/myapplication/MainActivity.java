@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity
         ProgressBar bar;
         MediaController controller;
     }
-    private final int TBL_SIZE = 2;
+    private final int TBL_SIZE = 4;
     private ContollerTable[] mControllers = null;
 
     private static ArrayAdapter<String> adapter;
@@ -56,8 +56,14 @@ public class MainActivity extends AppCompatActivity
         mControllers[0].surface  = mControllers[0].view.getHolder().getSurface();
         mControllers[1].view = (SurfaceView)findViewById(R.id.surfaceView2);
         mControllers[1].surface  = mControllers[1].view.getHolder().getSurface();
+        mControllers[2].view = (SurfaceView)findViewById(R.id.surfaceView3);
+        mControllers[2].surface  = mControllers[2].view.getHolder().getSurface();
+        mControllers[3].view = (SurfaceView)findViewById(R.id.surfaceView4);
+        mControllers[3].surface  = mControllers[3].view.getHolder().getSurface();
         mControllers[0].bar = (ProgressBar)findViewById(R.id.progressBar);
         mControllers[1].bar = (ProgressBar)findViewById(R.id.progressBar2);
+        mControllers[2].bar = (ProgressBar)findViewById(R.id.progressBar3);
+        mControllers[3].bar = (ProgressBar)findViewById(R.id.progressBar4);
         for (int i = 0;i < TBL_SIZE;i++) {
             mControllers[i].bar.setMax(100);
             mControllers[i].bar.setProgress(50);
@@ -133,6 +139,12 @@ public class MainActivity extends AppCompatActivity
         } else if (button.getText().toString().equals("disp2") == true) {
             Log.i(TAG, "onItemClick: disp2");
             index = 1;
+        } else if (button.getText().toString().equals("disp3") == true) {
+            Log.i(TAG, "onItemClick: disp3");
+            index = 2;
+        } else if (button.getText().toString().equals("disp4") == true) {
+            Log.i(TAG, "onItemClick: disp4");
+            index = 3;
         }
         return index;
     }

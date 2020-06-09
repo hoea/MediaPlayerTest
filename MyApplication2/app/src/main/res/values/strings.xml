@@ -6,9 +6,11 @@
     <string name="disp3">disp3</string>
     <string name="disp1">disp1</string>
     <string name="disp2">disp2</string>
+    <string name="disp4">disp4</string>
     <string-array name="displays">
         <item>1</item>
         <item>2</item>
         <item>3</item>
+        <item>4</item>
     </string-array>
 </resources>
