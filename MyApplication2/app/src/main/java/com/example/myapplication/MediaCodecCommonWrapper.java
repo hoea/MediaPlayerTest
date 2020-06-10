@@ -5,6 +5,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
 import android.util.Log;
+import android.util.Range;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -50,15 +51,43 @@ public class MediaCodecCommonWrapper implements Runnable {
 
     public static void getcodecs() {
         Log.d("Hoge", "getcodecs: called");
+        String TAG = "getCodecs";
         MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
         MediaCodecInfo[] codecInfos = codeclist.getCodecInfos();
         Log.i("Hoge", "getcodecs: " + codecInfos.length);
         for (int i=0;i < codecInfos.length;i++) {
-            Log.d("Hoge", "getcodecs: " + codecInfos[i]);
+            if (codecInfos[i].isEncoder() == true) {
+                continue;
+            }
+            Log.i(TAG, "getcodecs: ----------------------------------------");
+            Log.i(TAG, "getcodecs: hw accelaration: " + codecInfos[i].isHardwareAccelerated());
+            Log.i(TAG, "getcodecs: sw only: " + codecInfos[i].isSoftwareOnly());
+            Log.i(TAG, "getcodecs: vendor: " + codecInfos[i].isVendor());
+
             String types[] = codecInfos[i].getSupportedTypes();
             for (int j=0;j < types.length;j++) {
                 Log.i("Hoge", "getcodecs: name:" + codecInfos[i].getName() + " type:" + types[j] );
+                MediaCodecInfo.CodecCapabilities cap = codecInfos[i].getCapabilitiesForType(types[j]);
+                for (int cnt = 0;cnt < cap.colorFormats.length;cnt++) {
+                    Log.i(TAG, "getcodecs: colorFormat:" + cap.colorFormats[cnt]);
+                }
+                for (int cnt = 0;cnt < cap.profileLevels.length;cnt++) {
+                    Log.i(TAG, "getcodecs: profileLevels:" + cap.profileLevels[cnt]);
+                }
+                MediaCodecInfo.AudioCapabilities audiocap = cap.getAudioCapabilities();
+                if (audiocap != null) {
+                    Log.i(TAG, "getcodecs: audio bitrate range " + audiocap.getBitrateRange());
+                    Log.i(TAG, "getcodecs: audio max ch" + audiocap.getMaxInputChannelCount());
+                }
+                MediaCodecInfo.VideoCapabilities videocap = cap.getVideoCapabilities();
+                if (videocap != null) {
+                    Log.i(TAG, "getcodecs: video bitrate range " + videocap.getBitrateRange());
+                    Log.i(TAG, "getcodecs: video frame rate" + videocap.getSupportedFrameRates());
+                    Log.i(TAG, "getcodecs: video widths" + videocap.getSupportedWidths());
+                    Log.i(TAG, "getcodecs: video heights" + videocap.getSupportedHeights());
+                }
             }
+            Log.i(TAG, "getcodecs: ----------------------------------------");
         }
     }
 
