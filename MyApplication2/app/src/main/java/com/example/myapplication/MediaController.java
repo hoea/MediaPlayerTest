@@ -77,6 +77,9 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
         }
         mDuration = Math.max(videoduration,audioduration);
         mDuration = mDuration/1000;
+        if (mClock == null) {
+            mClock = new DefaultMediaClock();
+        }
         if (video != null) {
             video.setMediaClock(mClock);
         }
