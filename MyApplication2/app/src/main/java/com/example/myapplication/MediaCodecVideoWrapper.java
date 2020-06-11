@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.media.Image;
 import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.view.Surface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import static android.media.MediaCodecList.ALL_CODECS;
 
@@ -29,12 +31,17 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
         Log.i(TAG, "init: called");
         MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
         String hoge = codeclist.findDecoderForFormat(format);
-        Log.i(TAG, "init: codecName " + hoge);
         if (hoge == null) {
-            Log.e(TAG, "init: invalid codec mime = " + format.getString(MediaFormat.KEY_MIME));
+            Log.w(TAG, "init: invalid codec mime = " + format.getString(MediaFormat.KEY_MIME));
+            ArrayList<MediaCodecInfo> list = findDecoderInfoFromMime(format.getString(MediaFormat.KEY_MIME));
+            if (list.size() != 0) {
+                hoge = list.get(0).getName();
+            }
+        }
+        if (hoge == null) {
+            Log.e(TAG, "init: not found codec" + format.getString(MediaFormat.KEY_MIME));
             return false;
         }
-
         try {
             mCodec = MediaCodec.createByCodecName(hoge);
         } catch (IOException e) {

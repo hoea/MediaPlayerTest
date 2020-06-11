@@ -72,7 +72,12 @@ public class MediaExtractorWrapper implements Runnable {
 
     public void run() {
         while (mRunning == true) {
-            ByteBuffer inputBuffer = ByteBuffer.allocate(128*1024);
+            long bufSize = mExtractor.getSampleSize();
+            if (bufSize == -1) {
+                // EOF
+                break;
+            }
+            ByteBuffer inputBuffer = ByteBuffer.allocate((int)bufSize);
             if (mExtractor.readSampleData(inputBuffer,0) <0) {
                 break;
             }

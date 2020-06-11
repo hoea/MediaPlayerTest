@@ -52,42 +52,48 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
         mDuration = 0;
         long videoduration = 0;
         long audioduration = 0;
+        MediaCodecAudioWrapper audioDec = null;
+        MediaCodecVideoWrapper videoDec = null;
 
-        MediaCodecVideoWrapper video = null;
         // TODO:XXX
         for (int i = 0;i < formats.length;i++) {
             mFormats[i] = new MediaFormatInfo(formats[i], null);
             String mime = formats[i].getString(MediaFormat.KEY_MIME);
-            if (mime.indexOf("audio") != -1) {
-                mFormats[i].mWrapper = new MediaCodecAudioWrapper(this);
+            if (mime.indexOf("audio") != -1 && audioDec == null) {
+                audioDec = new MediaCodecAudioWrapper(this);
+                if (audioDec.init(mFormats[i].mFormat) == false) {
+                    audioDec = null;
+                }
+                mFormats[i].mWrapper = audioDec;
                 mClock = (MediaClock)mFormats[i].mWrapper;
                 audioduration = formats[i].getLong(MediaFormat.KEY_DURATION);
-            } else if (mime.indexOf("video") != -1) {
-                mFormats[i].mWrapper = new MediaCodecVideoWrapper(mSurface);
-                video = (MediaCodecVideoWrapper)(mFormats[i].mWrapper);
-                videoduration = formats[i].getLong(MediaFormat.KEY_DURATION);
-            }
-            if (mFormats[i].mWrapper != null) {
-                if (mFormats[i].mWrapper.init(mFormats[i].mFormat) == false) {
-                    Log.e(TAG, "extract: invalid format" + mime);
-                    return false;
+                mExtractor.selectTrack(i);
+            } else if (mime.indexOf("video") != -1 && videoDec == null) {
+                videoDec = new MediaCodecVideoWrapper(mSurface);
+                if (videoDec.init(mFormats[i].mFormat) == false) {
+                    videoDec = null;
                 }
+                mFormats[i].mWrapper = videoDec;
+                videoduration = formats[i].getLong(MediaFormat.KEY_DURATION);
                 mExtractor.selectTrack(i);
             }
+        }
+        if (videoDec == null && audioDec == null) {
+            return false;
         }
         mDuration = Math.max(videoduration,audioduration);
         mDuration = mDuration/1000;
         if (mClock == null) {
             mClock = new DefaultMediaClock();
         }
-        if (video != null) {
-            video.setMediaClock(mClock);
+        if (videoDec != null) {
+            videoDec.setMediaClock(mClock);
         }
         if (mCallback != null) {
             mCallback.notifyPlayPosition(this,0, mDuration);
         }
         mState = PlayerState.PREPARED;
-        return false;
+        return true;
     }
     public boolean start() {
         Log.i(TAG, "start: called");

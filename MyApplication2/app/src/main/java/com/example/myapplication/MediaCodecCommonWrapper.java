@@ -60,9 +60,9 @@ public class MediaCodecCommonWrapper implements Runnable {
                 continue;
             }
             Log.i(TAG, "getcodecs: ----------------------------------------");
-            Log.i(TAG, "getcodecs: hw accelaration: " + codecInfos[i].isHardwareAccelerated());
-            Log.i(TAG, "getcodecs: sw only: " + codecInfos[i].isSoftwareOnly());
-            Log.i(TAG, "getcodecs: vendor: " + codecInfos[i].isVendor());
+            //Log.i(TAG, "getcodecs: hw accelaration: " + codecInfos[i].isHardwareAccelerated());
+            //Log.i(TAG, "getcodecs: sw only: " + codecInfos[i].isSoftwareOnly());
+            //Log.i(TAG, "getcodecs: vendor: " + codecInfos[i].isVendor());
 
             String types[] = codecInfos[i].getSupportedTypes();
             for (int j=0;j < types.length;j++) {
@@ -91,13 +91,39 @@ public class MediaCodecCommonWrapper implements Runnable {
         }
     }
 
+    protected ArrayList<MediaCodecInfo> findDecoderInfoFromMime(String mime) {
+        ArrayList<MediaCodecInfo> list = new ArrayList<MediaCodecInfo>();
+        MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
+        MediaCodecInfo[] codecInfos = codeclist.getCodecInfos();
+        for (int i=0;i < codecInfos.length;i++) {
+            if (codecInfos[i].isEncoder() == true) {
+                continue;
+            }
+            String types[] = codecInfos[i].getSupportedTypes();
+            for (int j=0;j < types.length;j++) {
+                if (types[j].equals(mime) == true) {
+                    Log.i(TAG, "findDecoderInfoFromMime: fine codec:" + codecInfos[i].getName());
+                    list.add(codecInfos[i]);
+                }
+            }
+        }
+        return list;
+    }
+
     public boolean init(MediaFormat format) {
         Log.i(TAG, "init: called");
         MediaCodecList codeclist = new MediaCodecList(ALL_CODECS);
         String hoge = codeclist.findDecoderForFormat(format);
         Log.i(TAG, "init: codecName " + hoge);
         if (hoge == null) {
-            Log.e(TAG, "init: invalid codec mime = " + format.getString(MediaFormat.KEY_MIME));
+            Log.w(TAG, "init: invalid codec mime = " + format.getString(MediaFormat.KEY_MIME));
+            ArrayList<MediaCodecInfo> list = findDecoderInfoFromMime(format.getString(MediaFormat.KEY_MIME));
+            if (list.size() != 0) {
+                hoge = list.get(0).getName();
+            }
+        }
+        if (hoge == null) {
+            Log.e(TAG, "init: not found codec" + format.getString(MediaFormat.KEY_MIME));
             return false;
         }
         try {
