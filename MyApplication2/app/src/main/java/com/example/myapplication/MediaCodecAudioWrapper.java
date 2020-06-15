@@ -25,16 +25,31 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         }
         return mSink.pause(val);
     }
+    public boolean flush() {
+        stopThread();
+        mBuffers.clear();
+
+        mCodec.flush();
+        //mSink = null;
+
+        mWorkFlg = true;
+        mThread = new Thread(this);
+        mThread.start();
+        return true;
+    }
 
     @Override
     public int getPosition() {
-        return mSink.getPosition();
+        if (mSink == null) {
+            return 0;
+        }
+        return mSink.getPosition() + mBaseTime;
     }
 
     @Override
     public void notifyPlayPosition(long pos) {
         if (mCallback != null) {
-            mCallback.notifyPlayPosition(pos);
+            mCallback.notifyPlayPosition(pos + mBaseTime);
         }
     }
 
@@ -51,8 +66,16 @@ public class MediaCodecAudioWrapper extends MediaCodecCommonWrapper implements M
         } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
             Log.i(TAG, "run: output format changed");
             MediaFormat outformat = mCodec.getOutputFormat();
+            //mSink = new AudioSink(this);
             mSink.setFormat(outformat);
         }
         return true;
+    }
+
+    int mBaseTime = 0;
+    @Override
+    public boolean setBaseTime(int position) {
+        mBaseTime = position;
+        return false;
     }
 }

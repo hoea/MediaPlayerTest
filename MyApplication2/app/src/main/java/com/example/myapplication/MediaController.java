@@ -106,8 +106,23 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
                 mFormats[i].mWrapper.start();
             }
         }
-        mExtractor.extract();
+        mExtractor.start();
         mState = PlayerState.PLAYING;
+        return true;
+    }
+    boolean seek(int position) {
+        Log.i(TAG, "seek: called:" + position);
+
+        mExtractor.stopThread();
+        for (int i = 0;i < mFormats.length;i++) {
+            if (mFormats[i].mWrapper != null) {
+                mFormats[i].mWrapper.flush();
+            }
+        }
+        Log.i(TAG, "seek: all threads stopped.");
+        mClock.setBaseTime(position);
+        mExtractor.seek(position);
+        mExtractor.start();
         return true;
     }
     public boolean pause(){

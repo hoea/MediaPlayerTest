@@ -111,10 +111,7 @@ public class MainActivity extends AppCompatActivity
 
     private void extract() {
         int index = getDisplayIndex();
-        mControllers[index].controller = new MediaController(this);
-        mControllers[index].controller.initialize(mControllers[index].surface);
-        mControllers[index].controller.prepare(Environment.getExternalStorageDirectory() + "/Download/02.mp4");
-        mControllers[index].controller.start();
+        mControllers[index].controller.seek(0);
     }
 
     @TargetApi(Build.VERSION_CODES.M)

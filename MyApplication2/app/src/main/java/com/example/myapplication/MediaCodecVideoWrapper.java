@@ -21,6 +21,20 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
     private int outputIndex = -1;
     MediaCodec.BufferInfo mBufferInfo = null;
 
+    public boolean flush() {
+        stopThread();
+        mBuffers.clear();
+
+        mCodec.flush();
+        outputIndex = -1;
+        mBufferInfo = null;
+
+        mWorkFlg = true;
+        mThread = new Thread(this);
+        mThread.start();
+        return true;
+    }
+
     MediaCodecVideoWrapper(Surface surface) {
         super();
         mSufrace = surface;
@@ -66,14 +80,16 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
         }
         if (outputIndex >= 0) {
             ByteBuffer output = mCodec.getOutputBuffer(outputIndex);
-            Image image= mCodec.getOutputImage(outputIndex);
+            //Image image= mCodec.getOutputImage(outputIndex);
             Log.d(TAG, "processOutputFormat: " + output);
             Log.d(TAG, "processOutputFormat: " + outputIndex +
                     " pts=" + mBufferInfo.presentationTimeUs +
                     " time=" + mClock.getPosition());
-            int timediff = (int)(mBufferInfo.presentationTimeUs/1000) - mClock.getPosition();
+            int clockTime = mClock.getPosition();
+            int timediff = (int)(mBufferInfo.presentationTimeUs/1000) - clockTime;
 
             if (mSufrace == null) { // no surface --> drop frame
+                Log.w(TAG, "processOutputFormat: surface is not available");
                 mCodec.releaseOutputBuffer(outputIndex,false);
                 outputIndex = -1;
                 mBufferInfo = null;
@@ -81,9 +97,13 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
             }
             if (timediff > 50 /*ms*/) {
                 // not display yet.
+                Log.w(TAG, "processOutputFormat: not yet " + timediff + ":" +
+                        (int)(mBufferInfo.presentationTimeUs/1000) + ":" + clockTime);
                 return false;
             } else if (timediff < 0) {
                 // drop frame
+                Log.w(TAG, "processOutputFormat: drop frame" + timediff + ":" +
+                        (int)(mBufferInfo.presentationTimeUs/1000) + ":" + clockTime);
                 mCodec.releaseOutputBuffer(outputIndex,false);
                 outputIndex = -1;
                 mBufferInfo = null;
@@ -100,4 +120,5 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
         }
         return true;
     }
+
 }

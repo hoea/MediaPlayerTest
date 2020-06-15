@@ -19,9 +19,9 @@ public class MediaCodecCommonWrapper implements Runnable {
     protected MediaCodec mCodec;
     protected String mMimeTypes;
     protected String mType = null;
-    private Thread mThread;
+    protected Thread mThread;
     protected List<HogeBuffer> mBuffers = new ArrayList<HogeBuffer>();
-    private boolean mWorkFlg;
+    protected boolean mWorkFlg;
 
     MediaCodecCommonWrapper() {
         mWorkFlg = true;
@@ -33,21 +33,6 @@ public class MediaCodecCommonWrapper implements Runnable {
         return true;
     }
 
-    public boolean stop(){
-        mWorkFlg = false;
-        while(mThread.isAlive() == true) {
-            Log.i(TAG, "stop: wait for finishing Extractor ");
-            try {
-                Thread.sleep(100);
-            }catch (InterruptedException e) {
-            }
-        }
-        if (mCodec != null) {
-            mCodec.stop();
-            mCodec.release();
-        }
-        return true;
-    }
 
     public static void getcodecs() {
         Log.d("Hoge", "getcodecs: called");
@@ -148,6 +133,40 @@ public class MediaCodecCommonWrapper implements Runnable {
         return true;
     }
 
+    public boolean stop(){
+        stopThread();
+        if (mCodec != null) {
+            mCodec.stop();
+            mCodec.release();
+        }
+        return true;
+    }
+    public boolean flush() {
+        stopThread();
+        mBuffers.clear();
+
+        mCodec.flush();
+
+        mWorkFlg = true;
+        mThread = new Thread(this);
+        mThread.start();
+        return true;
+    }
+
+    protected boolean stopThread() {
+        mWorkFlg = false;
+        while(mThread.isAlive() == true) {
+            Log.i(TAG, "stop: wait for finishing thread  " + mType);
+            try {
+                Thread.sleep(100);
+            }catch (InterruptedException e) {
+            }
+        }
+        mThread = null;
+        Log.i(TAG, "stopThread: thread finished.");
+        return true;
+    }
+
     class HogeBuffer {
         public long pts;
         public ByteBuffer buffer;
@@ -177,14 +196,14 @@ public class MediaCodecCommonWrapper implements Runnable {
             }
             if (inputIndex >= 0 && inputBuffer == null) {
                 inputBuffer = mCodec.getInputBuffer(inputIndex);
-                Log.d(TAG, "run: getInputBuffer success" + inputBuffer + " limit:" + inputBuffer.limit());
+                Log.v(TAG, "run: getInputBuffer success" + inputBuffer + " limit:" + inputBuffer.limit());
             }
             if (inputBuffer != null) {
                 synchronized (mBuffers) {
                     if (mBuffers.size() > 0) {
                         HogeBuffer buffer = mBuffers.get(0);
                         mBuffers.remove(0);
-                        Log.d(TAG, "run: remove pts=" + buffer.pts + ", size=" + buffer.buffer.limit());
+                        Log.d(TAG, "run: queueInputBuffer :" + mType + " pts=" + buffer.pts + ", size=" + buffer.buffer.limit());
                         inputBuffer.put(buffer.buffer.array(),0,buffer.buffer.limit());
                         mCodec.queueInputBuffer(inputIndex,0,buffer.buffer.limit(),buffer.pts,0);
                         inputBuffer = null;
@@ -196,6 +215,7 @@ public class MediaCodecCommonWrapper implements Runnable {
         }
         Log.i(TAG, "run: thread return");
     }
+
     protected boolean processOutputFormat() {
         return false;
     }

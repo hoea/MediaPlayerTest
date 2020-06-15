@@ -109,5 +109,16 @@ public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
         mTrack.release();
         return true;
     }
+
+    public boolean flush() {
+        mTrack.flush();
+        try {
+            Thread.sleep(100);
+        }catch (InterruptedException e) {
+        }
+        mPosition = 0;
+        mLastPos = 0;
+        return true;
+    }
 }
 

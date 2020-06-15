@@ -30,6 +30,39 @@ public class MediaExtractorWrapper implements Runnable {
         return true;
     }
 
+    public boolean unselectTrack(int idx) {
+        Log.i(TAG, "unselectTrack: " + idx);
+        if (mExtractor == null) {
+            return false;
+        }
+        mExtractor.unselectTrack(idx);
+        return true;
+    }
+
+    public boolean stopThread() {
+        if (mExtractor == null) {
+            return false;
+        }
+        mRunning = false;
+        while(mThread.isAlive() == true) {
+            Log.i(TAG, "stop: wait for finishing Extractor ");
+            try {
+                Thread.sleep(100);
+            }catch (InterruptedException e) {
+            }
+        }
+        Log.i(TAG, "stopThread: finished");
+        return true;
+    }
+
+    public boolean seek(int position) {
+        if (mExtractor == null) {
+            return false;
+        }
+        mExtractor.seekTo((long)position, 0);
+        return true;
+    }
+
     public MediaFormat[] getContentsInfos(String filename) {
         mFilename = filename;
         mExtractor = new MediaExtractor();
@@ -43,11 +76,12 @@ public class MediaExtractorWrapper implements Runnable {
         MediaFormat formats[] = new MediaFormat[numTracks];
         for (int i = 0; i < numTracks; i++) {
             formats[i] = mExtractor.getTrackFormat(i);
+            Log.i(TAG, "getContentsInfos: idx=" + i + ":" + formats[i]);
         }
         return formats;
     }
 
-    public void extract() {
+    public void start() {
         mThread = new Thread(this);
         mRunning = true;
         mThread.start();
@@ -66,6 +100,8 @@ public class MediaExtractorWrapper implements Runnable {
             }catch (InterruptedException e) {
             }
         }
+        mExtractor.release();
+        mExtractor = null;
         return true;
     }
 
@@ -103,8 +139,7 @@ public class MediaExtractorWrapper implements Runnable {
             }
             mExtractor.advance();
         }
-        mExtractor.release();
-        mExtractor = null;
+
         mRunning = false;
     }
 }
