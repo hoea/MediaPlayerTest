@@ -8,7 +8,7 @@ import android.util.Log;
 
 import java.nio.ByteBuffer;
 
-public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
+public class AudioSink {
     private AudioTrack mTrack;
     private String TAG = "AudioSink";
     private int mFrameRate = -1;
@@ -48,31 +48,38 @@ public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
                 .setBufferSizeInBytes(bufSize)
                 .build();
 
-        mTrack.setPlaybackPositionUpdateListener(this);
         mTrack.setPositionNotificationPeriod(1024);
+        mTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener(){
+            @Override
+            public void onPeriodicNotification(AudioTrack track){
+                /*
+                Log.i(TAG, "onPeriodicNotification: called");
+                float framerate = (float)(mFrameRate)/1000;
+                Log.d(TAG, "getPosition: framerate" + framerate);
+                float position = (float)(track.getPlaybackHeadPosition()) / framerate;
+                Log.d(TAG, "getPosition: pos=" + position);
+
+                mPosition = (int)(position);
+                if (Math.abs(mPosition - mLastPos) >= 500) {
+                    if (mCallback != null) {
+                        mCallback.notifyPlayPosition(mPosition);
+                        mLastPos = mPosition;
+                    }
+                }
+
+                 */
+            }
+
+            @Override
+            public void onMarkerReached(AudioTrack track) {
+                // TODO Auto-generated method stub
+                mTrack.stop();
+                Log.d(TAG, "audioStop");
+            }
+        });
 
         mTrack.play();
         return true;
-    }
-    
-    public void onMarkerReached(AudioTrack track) {
-        Log.i(TAG, "onMarkerReached: called");
-    }
-
-    public void onPeriodicNotification(AudioTrack track) {
-        Log.d(TAG, "onPeriodicNotification: called");
-        float framerate = (float)(mFrameRate)/1000;
-        Log.d(TAG, "getPosition: framerate" + framerate);
-        float position = (float)(track.getPlaybackHeadPosition()) / framerate;
-        Log.d(TAG, "getPosition: pos=" + position);
-
-        mPosition = (int)(position);
-        if (Math.abs(mPosition - mLastPos) >= 500) {
-            if (mCallback != null) {
-                mCallback.notifyPlayPosition(mPosition);
-                mLastPos = mPosition;
-            }
-        }
     }
     
     public boolean pause(boolean val) {
@@ -90,6 +97,19 @@ public class AudioSink implements AudioTrack.OnPlaybackPositionUpdateListener {
     }
 
     public int getPosition() {
+        Log.d(TAG, "getPosition: called");
+        float framerate = (float)(mFrameRate)/1000;
+        Log.d(TAG, "getPosition: framerate" + framerate);
+        float position = (float)(mTrack.getPlaybackHeadPosition()) / framerate;
+        Log.d(TAG, "getPosition: pos=" + position);
+
+        mPosition = (int)(position);
+        if (Math.abs(mPosition - mLastPos) >= 500) {
+            if (mCallback != null) {
+                mCallback.notifyPlayPosition(mPosition);
+                mLastPos = mPosition;
+            }
+        }
         return mPosition;
     }
 

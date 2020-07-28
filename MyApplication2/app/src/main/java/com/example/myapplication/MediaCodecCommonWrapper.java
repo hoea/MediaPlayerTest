@@ -45,9 +45,6 @@ public class MediaCodecCommonWrapper implements Runnable {
                 continue;
             }
             Log.i(TAG, "getcodecs: ----------------------------------------");
-            //Log.i(TAG, "getcodecs: hw accelaration: " + codecInfos[i].isHardwareAccelerated());
-            //Log.i(TAG, "getcodecs: sw only: " + codecInfos[i].isSoftwareOnly());
-            //Log.i(TAG, "getcodecs: vendor: " + codecInfos[i].isVendor());
 
             String types[] = codecInfos[i].getSupportedTypes();
             for (int j=0;j < types.length;j++) {
@@ -59,6 +56,17 @@ public class MediaCodecCommonWrapper implements Runnable {
                 for (int cnt = 0;cnt < cap.profileLevels.length;cnt++) {
                     Log.i(TAG, "getcodecs: profileLevels:" + cap.profileLevels[cnt]);
                 }
+                String[] features = {"FEATURE_AdaptivePlayback",
+                        "FEATURE_DynamicTimestamp",
+                        "FEATURE_MutipleFrames",
+                        "FEATURE_PartialFrame",
+                        "FEATURE_SecurePlayback",
+                        "FEATURE_TunneledPlayback"};
+
+                for (int cnt = 0;cnt < features.length;cnt++) {
+                    Log.i(TAG,features[cnt] + ":" + cap.isFeatureSupported(features[cnt]));
+                }
+
                 MediaCodecInfo.AudioCapabilities audiocap = cap.getAudioCapabilities();
                 if (audiocap != null) {
                     Log.i(TAG, "getcodecs: audio bitrate range " + audiocap.getBitrateRange());

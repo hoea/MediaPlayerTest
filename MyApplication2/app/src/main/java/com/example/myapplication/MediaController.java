@@ -36,7 +36,7 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
     }
     public boolean initialize(Surface surface) {
         mSurface = surface;
-        return false;
+        return true;
     }
     long mDuration;
     public boolean prepare(String filename) {
@@ -63,6 +63,7 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
                 audioDec = new MediaCodecAudioWrapper(this);
                 if (audioDec.init(mFormats[i].mFormat) == false) {
                     audioDec = null;
+                    return false;
                 }
                 mFormats[i].mWrapper = audioDec;
                 mClock = (MediaClock)mFormats[i].mWrapper;
@@ -72,6 +73,7 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
                 videoDec = new MediaCodecVideoWrapper(mSurface);
                 if (videoDec.init(mFormats[i].mFormat) == false) {
                     videoDec = null;
+                    return false;
                 }
                 mFormats[i].mWrapper = videoDec;
                 videoduration = formats[i].getLong(MediaFormat.KEY_DURATION);

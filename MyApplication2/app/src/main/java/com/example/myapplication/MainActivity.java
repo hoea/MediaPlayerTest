@@ -160,10 +160,23 @@ public class MainActivity extends AppCompatActivity
         if (mControllers[index].controller != null) {
             mControllers[index].controller.stop();
         }
+        boolean bresult = false;
         mControllers[index].controller = new MediaController(this);
-        mControllers[index].controller.initialize(mControllers[index].surface);
-        mControllers[index].controller.prepare(parent.getItemAtPosition(position).toString());
-        mControllers[index].controller.start();
+        bresult = mControllers[index].controller.initialize(mControllers[index].surface);
+        if (bresult == false) {
+            Toast.makeText(this, "controller initialize failed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        bresult = mControllers[index].controller.prepare(parent.getItemAtPosition(position).toString());
+        if (bresult == false) {
+            Toast.makeText(this, "controller prepare failed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        bresult = mControllers[index].controller.start();
+        if (bresult == false) {
+            Toast.makeText(this, "controller start failed", Toast.LENGTH_SHORT).show();
+            return;
+        }
         return;
     }
 
