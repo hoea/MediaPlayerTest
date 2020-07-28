@@ -97,13 +97,13 @@ public class MediaCodecVideoWrapper extends MediaCodecCommonWrapper {
             }
             if (timediff > 50 /*ms*/) {
                 // not display yet.
-                Log.w(TAG, "processOutputFormat: not yet " + timediff + ":" +
+                Log.d(TAG, "processOutputFormat: not yet " + timediff + ":" +
                         (int)(mBufferInfo.presentationTimeUs/1000) + ":" + clockTime);
                 return false;
-            } else if (timediff < 0) {
+            } else if (timediff < -100) {
                 // drop frame
-                Log.w(TAG, "processOutputFormat: drop frame" + timediff + ":" +
-                        (int)(mBufferInfo.presentationTimeUs/1000) + ":" + clockTime);
+                Log.w(TAG, "processOutputFormat: drop frame" + timediff + " videodat:" +
+                        (int)(mBufferInfo.presentationTimeUs/1000) + " current:" + clockTime);
                 mCodec.releaseOutputBuffer(outputIndex,false);
                 outputIndex = -1;
                 mBufferInfo = null;
