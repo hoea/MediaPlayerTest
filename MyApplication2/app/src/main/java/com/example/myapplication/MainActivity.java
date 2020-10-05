@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.AdapterView;
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity
 
     class ContollerTable {
         SurfaceView view;
-        Surface surface;
+        SurfaceHolder surface;
         ProgressBar bar;
         MediaControllerBase controller;
     }
@@ -53,13 +54,13 @@ public class MainActivity extends AppCompatActivity
             mControllers[i] = new ContollerTable();
         }
         mControllers[0].view = (SurfaceView)findViewById(R.id.surfaceView);
-        mControllers[0].surface  = mControllers[0].view.getHolder().getSurface();
+        mControllers[0].surface  = mControllers[0].view.getHolder();
         mControllers[1].view = (SurfaceView)findViewById(R.id.surfaceView2);
-        mControllers[1].surface  = mControllers[1].view.getHolder().getSurface();
+        mControllers[1].surface  = mControllers[1].view.getHolder();
         mControllers[2].view = (SurfaceView)findViewById(R.id.surfaceView3);
-        mControllers[2].surface  = mControllers[2].view.getHolder().getSurface();
+        mControllers[2].surface  = mControllers[2].view.getHolder();
         mControllers[3].view = (SurfaceView)findViewById(R.id.surfaceView4);
-        mControllers[3].surface  = mControllers[3].view.getHolder().getSurface();
+        mControllers[3].surface  = mControllers[3].view.getHolder();
         mControllers[0].bar = (ProgressBar)findViewById(R.id.progressBar);
         mControllers[1].bar = (ProgressBar)findViewById(R.id.progressBar2);
         mControllers[2].bar = (ProgressBar)findViewById(R.id.progressBar3);
@@ -161,7 +162,11 @@ public class MainActivity extends AppCompatActivity
             mControllers[index].controller.stop();
         }
         boolean bresult = false;
-        mControllers[index].controller = new MediaControllerNuPlayer(this);
+        if (index == 1) {
+            mControllers[index].controller = new MediaControllerNuPlayer(this);
+        } else {
+            mControllers[index].controller = new MediaController(this);
+        }
         bresult = mControllers[index].controller.initialize(mControllers[index].surface);
         if (bresult == false) {
             Toast.makeText(this, "controller initialize failed", Toast.LENGTH_SHORT).show();

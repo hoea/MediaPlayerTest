@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.media.MediaFormat;
 import android.util.Log;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 
 import java.nio.ByteBuffer;
 
@@ -34,8 +35,8 @@ public class MediaController implements MediaControllerBase, MediaExtractorWrapp
     public MediaController(MediaControllerCallback callback) {
         mCallback = callback;
     }
-    public boolean initialize(Surface surface) {
-        mSurface = surface;
+    public boolean initialize(SurfaceHolder surface) {
+        mSurface = surface.getSurface();
         return true;
     }
     long mDuration;

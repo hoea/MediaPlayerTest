@@ -1,9 +1,9 @@
 package com.example.myapplication;
 
-import android.view.Surface;
+import android.view.SurfaceHolder;
 
 public interface MediaControllerBase {
-    public boolean initialize(Surface surface);
+    public boolean initialize(SurfaceHolder surface);
     public boolean prepare(String filename);
     public boolean start();
     public boolean seek(int position);
