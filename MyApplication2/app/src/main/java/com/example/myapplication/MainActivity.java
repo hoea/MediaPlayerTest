@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity
         SurfaceView view;
         Surface surface;
         ProgressBar bar;
-        MediaController controller;
+        MediaControllerBase controller;
     }
     private final int TBL_SIZE = 4;
     private ContollerTable[] mControllers = null;
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity
             mControllers[index].controller.stop();
         }
         boolean bresult = false;
-        mControllers[index].controller = new MediaController(this);
+        mControllers[index].controller = new MediaControllerNuPlayer(this);
         bresult = mControllers[index].controller.initialize(mControllers[index].surface);
         if (bresult == false) {
             Toast.makeText(this, "controller initialize failed", Toast.LENGTH_SHORT).show();

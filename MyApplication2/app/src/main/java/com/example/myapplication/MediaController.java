@@ -6,7 +6,7 @@ import android.view.Surface;
 
 import java.nio.ByteBuffer;
 
-public class MediaController implements MediaExtractorWrapperCallback ,MediaClockCallback{
+public class MediaController implements MediaControllerBase, MediaExtractorWrapperCallback ,MediaClockCallback{
     final private String TAG = "MediaController";
     enum PlayerState {
         IDLE,
@@ -112,7 +112,7 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
         mState = PlayerState.PLAYING;
         return true;
     }
-    boolean seek(int position) {
+    public boolean seek(int position) {
         Log.i(TAG, "seek: called:" + position);
 
         mExtractor.stopThread();
@@ -160,6 +160,16 @@ public class MediaController implements MediaExtractorWrapperCallback ,MediaCloc
     @Override
     public boolean writeCallback(ByteBuffer buffer, long pts, int index) {
         return mFormats[index].mWrapper.write(buffer,pts);
+    }
+
+    @Override
+    public boolean notifyEos() {
+        for (int i = 0;i < mFormats.length;i++) {
+            if (mFormats[i].mWrapper != null) {
+                mFormats[i].mWrapper.write(null,-1);
+            }
+        }
+        return false;
     }
 
     public void notifyPlayPosition(long pos) {

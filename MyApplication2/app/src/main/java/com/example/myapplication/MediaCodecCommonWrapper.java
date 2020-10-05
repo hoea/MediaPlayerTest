@@ -211,11 +211,15 @@ public class MediaCodecCommonWrapper implements Runnable {
                     if (mBuffers.size() > 0) {
                         HogeBuffer buffer = mBuffers.get(0);
                         mBuffers.remove(0);
-                        Log.d(TAG, "run: queueInputBuffer :" + mType + " pts=" + buffer.pts + ", size=" + buffer.buffer.limit());
-                        inputBuffer.put(buffer.buffer.array(),0,buffer.buffer.limit());
-                        mCodec.queueInputBuffer(inputIndex,0,buffer.buffer.limit(),buffer.pts,0);
-                        inputBuffer = null;
-                        inputIndex = -1;
+                        if (buffer.buffer == null) {
+                            Log.i(TAG, "run: detect eos");
+                        } else {
+                            Log.d(TAG, "run: queueInputBuffer :" + mType + " pts=" + buffer.pts + ", size=" + buffer.buffer.limit());
+                            inputBuffer.put(buffer.buffer.array(), 0, buffer.buffer.limit());
+                            mCodec.queueInputBuffer(inputIndex, 0, buffer.buffer.limit(), buffer.pts, 0);
+                            inputBuffer = null;
+                            inputIndex = -1;
+                        }
                     }
                 }
             }
